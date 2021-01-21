@@ -171,6 +171,8 @@ const CoreScroller = {
     this.time = 0;
     this.lastEvent = (this.keyIsDown = null);
     this.installCanceEventListener();
+    this.timeStamp = 0;
+    this.elapsed = 0;
   },
 
   // This installs listeners for events which should cancel smooth scrolling.
@@ -184,7 +186,11 @@ const CoreScroller = {
       keydown: event => {
         return handlerStack.alwaysContinueBubbling(() => {
           this.keyIsDown = true;
-          if (!event.repeat) { this.time += 1; }
+          this.elapsed = event.timeStamp - this.timeStamp;
+          if (this.elapsed > 220.0) {
+            this.time += 1;
+          }
+          this.timeStamp = event.timeStamp;
           this.lastEvent = event;
         });
       },
@@ -232,6 +238,10 @@ const CoreScroller = {
     // continues scrolling.
     if (this.lastEvent != null ? this.lastEvent.repeat : undefined)
       return;
+
+    if (this.elapsed < 100.0) {
+      return;
+    }
 
     const activationTime = ++this.time;
     const myKeyIsStillDown = () => (this.time === activationTime) && this.keyIsDown;
